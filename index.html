@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dönem Sonu Projesi - SPA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1> DASH kullanıcı Uygulaması</h1>
+        <p>Modern API connect & User Directory (SPA).</p>
+    </header>
+
+    <section id="filter-area">
+        <input type="text" id="searchInput" placeholder="İsim ile filtrele...">
+        <button id="searchBtn">Ara </button>
+    </section>
+
+    <div id="statusMessage"></div>
+
+    <main id="cardContainer" class="card-grid"></main>
+
+    <div id="detailPanel" class="hidden">
+        <div class="detail-content">
+            <h2 id="detailTitle"></h2>
+            <p id="detailEmail"></p>
+            <p id="detailPhone"></p>
+            <button id="closeDetail">Kapat</button>
+        </div>
+    </div>
+
+    <footer>
+        <section id="about">
+            <h3>Hakkımızda</h3>
+            <p>
+        <strong>DASH</strong>, veriyi sanata dönüştürür. 
+        Hedefimiz: Karmaşık API sistemlerini,<br>
+         herkes için şık ve hızlı bir dijital deneyime dönüştürmek.</p>
+        </section>
+        <section id="contact">
+            <h3>İletişim</h3>
+            <p>E-Posta: info@Dash.com</p>
+            <p>+905469292905</p>
+        </section>
+    </footer>
+
+    <script >
+ const cardContainer = document.getElementById('cardContainer');
+const statusMessage = document.getElementById('statusMessage');
+const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
+
+let tumVeriler = [];
+
+async function verileriGetir() {
+    try {
+        statusMessage.innerText = "Yükleniyor...";
+        const yanit = await fetch('https://jsonplaceholder.typicode.com/users');
+        
+        if (!yanit.ok) {
+            throw new Error("Veri çekilirken hata oluştu");
+        }
+        
+        tumVeriler = await yanit.json();
+        kartlariBas(tumVeriler);
+        statusMessage.innerText = ""; 
+    } catch (hata) {
+        statusMessage.innerText = "Hata: " + hata.message;
+    }
+}
+
+function kartlariBas(liste) {
+    cardContainer.innerHTML = "";
+    
+    if (liste.length === 0) {
+        statusMessage.innerText = "Sonuç bulunamadı";
+        return;
+    }
+
+    liste.forEach(kullanici => {
+        const kart = document.createElement('div');
+        kart.className = 'card';
+        kart.innerHTML = `
+            <h3>${kullanici.name}</h3>
+            <p>Şehir: ${kullanici.address.city}</p>
+            <button onclick="detayGoster(${kullanici.id})">Detay Gör</button>
+        `;
+        cardContainer.appendChild(kart);
+    });
+}
+
+function detayGoster(id) {
+    const kisi = tumVeriler.find(u => u.id === id);
+    
+    if (kisi) {
+        document.getElementById('detailTitle').innerText = kisi.name;
+        document.getElementById('detailEmail').innerText = "E-posta: " + kisi.email;
+        document.getElementById('detailPhone').innerText = "Telefon: " + kisi.phone;
+        document.getElementById('detailPanel').classList.remove('hidden');
+    }
+}
+
+searchBtn.addEventListener('click', () => {
+    const aramaTerimi = searchInput.value.toLowerCase();
+    const filtreliListe = tumVeriler.filter(u => 
+        u.name.toLowerCase().includes(aramaTerimi)
+    );
+    kartlariBas(filtreliListe);
+});
+
+document.getElementById('closeDetail').addEventListener('click', () => {
+    document.getElementById('detailPanel').classList.add('hidden');
+});
+
+verileriGetir();
+    </script>
+</body>
+</html>
